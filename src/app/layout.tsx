@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces, Space_Mono } from "next/font/google";
+import { Inter, Fraunces, Space_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 
-// ABC Oracle alternative — warm, clean grotesque sans-serif
-// DM Sans has similar rounded, friendly letterforms to ABC Oracle
-const dmSans = DM_Sans({
+// Inter — clean, modern grotesque sans-serif matching fabric.so's body font
+const inter = Inter({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -83,9 +83,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${fraunces.variable} ${spaceMono.variable} ${exposure.variable} antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${spaceMono.variable} ${exposure.variable} antialiased`}
     >
-      <body className="min-h-dvh overflow-x-hidden font-sans">{children}</body>
+      <body className="min-h-dvh overflow-x-hidden font-sans">
+        {children}
+        <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
+      </body>
     </html>
   );
 }

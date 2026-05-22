@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import gsap from "gsap";
+import { Button } from "@/components/ui/button";
 
 // Two color themes that cycle, matching Dia's implementation
 const colorThemes = [
@@ -37,183 +38,39 @@ const colorThemes = [
   },
 ];
 
-// --- Card content types ---
-type CardContent =
-  | { type: "square"; id: string; gradient: string; label: string }
-  | { type: "wide-tts"; id: string }
-  | { type: "wide-voice"; id: string }
-  | { type: "wide-translation"; id: string }
-  | { type: "bar-translation"; id: string }
-  | { type: "bar-webcapture"; id: string }
-  | { type: "youtube"; id: string }
-  | { type: "list-papers"; id: string }
-  | { type: "list-notes"; id: string }
-  | { type: "list-bookmarks"; id: string };
+// Shared card base class (fabric.so clean style)
+const cardBase = "bg-white border border-[#ededed] rounded-[2rem] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]";
 
-const CARD_SETS: CardContent[][] = [
-  // Set 0
-  [
-    { type: "square", id: "ai-chat", gradient: "from-blue-400 to-purple-500", label: "AI Chat" },
-    { type: "wide-tts", id: "tts" },
-    { type: "bar-translation", id: "translation-bar" },
-    { type: "list-papers", id: "papers" },
-  ],
-  // Set 1
-  [
-    { type: "square", id: "highlights", gradient: "from-yellow-300 to-amber-400", label: "Highlights" },
-    { type: "wide-voice", id: "voice-chat" },
-    { type: "youtube", id: "youtube" },
-    { type: "list-bookmarks", id: "bookmarks" },
-  ],
-  // Set 2
-  [
-    { type: "square", id: "ocr", gradient: "from-emerald-400 to-teal-500", label: "OCR" },
-    { type: "wide-translation", id: "translation-wide" },
-    { type: "bar-webcapture", id: "webcapture-bar" },
-    { type: "list-notes", id: "notes" },
-  ],
-];
+// --- 4 fixed card components: PDF, Video, Web Capture, AI Chat ---
 
-// --- Shared SVG icons ---
-const ChevronDown = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0 text-black/35">
-    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-// --- Card content renderers ---
-
-function SquareCardContent({ gradient, label }: { gradient: string; label: string }) {
+function PDFCard() {
   return (
-    <div className="w-[8.8rem] h-[8.8rem] rounded-[1.4rem] bg-white/70 border border-black/[0.08] backdrop-blur-xl flex flex-col justify-center items-center gap-[0.6rem] p-[0.8rem] shadow-[0px_6px_22px_0px_rgba(0,0,0,0.1),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <span className={`block overflow-hidden rounded-[0.4rem] w-[4.6rem] h-[4.6rem] bg-gradient-to-br ${gradient}`} />
-      <div className="flex items-center justify-center h-[1.6rem] rounded-full bg-[#efefef] text-[1rem] leading-none px-[0.7rem] font-mono text-black/85">
-        {label}
+    <div className={`w-[24rem] ${cardBase} p-[0.8rem] font-sans`}>
+      <div className="relative rounded-[1.2rem] overflow-hidden bg-white aspect-[3/4]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/paper-attention.png"
+          alt="Attention Is All You Need — Vaswani et al."
+          className="w-full h-full object-cover object-top"
+        />
       </div>
-    </div>
-  );
-}
-
-// Digit roller component for countdown animations
-function DigitRoller({
-  digits,
-  currentIndex,
-}: {
-  digits: string[];
-  currentIndex: number;
-}) {
-  return (
-    <span className="relative inline-block overflow-hidden align-baseline w-[1em] h-[1.6rem]">
-      <span
-        className="absolute top-0 left-0 flex flex-col will-change-transform transition-transform duration-700 ease-out"
-        style={{ transform: `translateY(-${currentIndex * 16}px)` }}
-      >
-        {digits.map((d, i) => (
-          <span key={i} className="flex items-center h-[1.6rem]">
-            {d}
-          </span>
-        ))}
-      </span>
-    </span>
-  );
-}
-
-function WideTTSContent({ digitIndex }: { digitIndex: number }) {
-  return (
-    <div className="block text-left pointer-events-auto bg-white/70 border border-black/[0.08] rounded-[1.4rem] backdrop-blur-xl font-sans w-[27.2rem] p-[2rem] shadow-[0px_8px_22px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <div className="flex items-center justify-between gap-[0.2rem]">
-        <div className="text-[1.6rem] font-semibold leading-[2.2rem]">
-          <span className="text-black">Text to Speech</span>{" "}
-          <span className="text-black/45">
-            pg 1
-            <DigitRoller
-              digits={["5", "4", "3", "2", "1", "0", "9", "8", "7", "6"]}
-              currentIndex={digitIndex}
-            />
-          </span>
-        </div>
-        <ChevronDown />
-      </div>
-      <p className="text-[1.4rem] text-black/60 leading-[2rem] mt-[1rem]">
-        Reading aloud...
-      </p>
-    </div>
-  );
-}
-
-function WideVoiceContent() {
-  return (
-    <div className="block text-left pointer-events-auto bg-white/70 border border-black/[0.08] rounded-[1.4rem] backdrop-blur-xl font-sans w-[27.2rem] p-[2rem] shadow-[0px_8px_22px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <div className="flex items-center justify-between gap-[0.2rem]">
-        <div className="text-[1.6rem] font-semibold leading-[2.2rem]">
-          <span className="text-black">Voice Chat</span>
-        </div>
-        <ChevronDown />
-      </div>
-      <div className="flex items-center gap-[0.6rem] mt-[1rem]">
-        <span className="relative flex h-[0.8rem] w-[0.8rem]">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-[0.8rem] w-[0.8rem] bg-emerald-500" />
+      <div className="flex items-center gap-[0.8rem] mt-[0.8rem] px-[0.8rem] pb-[0.4rem]">
+        <svg width="16" height="18" viewBox="0 0 16 18" fill="none" className="shrink-0">
+          <rect x="0.5" y="0.5" width="15" height="17" rx="2" stroke="#E53E3E" strokeWidth="1" fill="#FFF5F5" />
+          <text x="8" y="12.5" textAnchor="middle" fontSize="7" fontWeight="700" fill="#E53E3E">PDF</text>
+        </svg>
+        <span className="text-[1.2rem] font-medium text-black/70 tracking-[-0.01em] truncate">
+          Attention Is All You Need
         </span>
-        <p className="text-[1.4rem] text-black/60 leading-[2rem]">
-          Listening...
-        </p>
       </div>
     </div>
   );
 }
 
-function WideTranslationContent() {
+function VideoCard() {
   return (
-    <div className="block text-left pointer-events-auto bg-white/70 border border-black/[0.08] rounded-[1.4rem] backdrop-blur-xl font-sans w-[27.2rem] p-[2rem] shadow-[0px_8px_22px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <div className="flex items-center justify-between gap-[0.2rem]">
-        <div className="text-[1.6rem] font-semibold leading-[2.2rem]">
-          <span className="text-black">Translation</span>
-        </div>
-        <ChevronDown />
-      </div>
-      <p className="text-[1.4rem] text-black/60 leading-[2rem] mt-[1rem]">
-        42 languages
-      </p>
-    </div>
-  );
-}
-
-function BarTranslationContent() {
-  return (
-    <div className="relative flex items-center gap-[1.1rem] w-[28rem] h-[5rem] py-[1.3rem] px-[1.6rem] rounded-[1.4rem] bg-white/70 border border-black/[0.08] shadow-[0px_6px_20px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <svg width="22" height="15" viewBox="0 0 22 15" fill="none" className="shrink-0 text-black/85">
-        <circle cx="6" cy="7.5" r="5" stroke="currentColor" strokeWidth="1.2" fill="none" />
-        <line x1="14" y1="3" x2="21" y2="3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="14" y1="7.5" x2="21" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <line x1="14" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-      <span className="font-sans font-normal text-[1.8rem] leading-none text-black/85">
-        Translation
-      </span>
-    </div>
-  );
-}
-
-function BarWebCaptureContent() {
-  return (
-    <div className="relative flex items-center gap-[1.1rem] w-[28rem] h-[5rem] py-[1.3rem] px-[1.6rem] rounded-[1.4rem] bg-white/70 border border-black/[0.08] shadow-[0px_6px_20px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 text-black/85">
-        <circle cx="10" cy="10" r="8.5" stroke="currentColor" strokeWidth="1.2" />
-        <ellipse cx="10" cy="10" rx="4" ry="8.5" stroke="currentColor" strokeWidth="1.2" />
-        <line x1="1.5" y1="10" x2="18.5" y2="10" stroke="currentColor" strokeWidth="1.2" />
-      </svg>
-      <span className="font-sans font-normal text-[1.8rem] leading-none text-black/85">
-        Web Capture
-      </span>
-    </div>
-  );
-}
-
-function YouTubeContent() {
-  return (
-    <div className="w-[22rem] rounded-[1.4rem] bg-white/70 border border-black/[0.08] backdrop-blur-xl p-[0.8rem] shadow-[0px_6px_22px_0px_rgba(0,0,0,0.1),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <div className="relative aspect-video rounded-[0.8rem] overflow-hidden bg-black">
+    <div className={`w-[24rem] ${cardBase} p-[0.8rem]`}>
+      <div className="relative aspect-video rounded-[1.2rem] overflow-hidden bg-black">
         <iframe
           src="https://www.youtube-nocookie.com/embed/aircAruvnKk"
           title="3Blue1Brown — But what is a neural network?"
@@ -222,119 +79,92 @@ function YouTubeContent() {
           className="absolute inset-0 w-full h-full pointer-events-auto"
         />
       </div>
-      <p className="font-sans text-[1.2rem] text-black/60 mt-[0.6rem] px-[0.4rem]">
-        3Blue1Brown
-      </p>
-    </div>
-  );
-}
-
-function ListPapersContent() {
-  return (
-    <div className="block text-left pointer-events-auto font-sans w-[33.6rem] p-[1.6rem] bg-white/70 rounded-[1.4rem] border border-black/[0.08] shadow-[0px_8px_22px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <div className="flex items-center gap-[0.8rem] px-[0.4rem] pt-[0.3rem]">
-        <span className="text-[2rem] leading-none" aria-hidden="true">
-          &#x1F4DA;
+      <div className="flex items-center gap-[0.8rem] mt-[0.8rem] px-[0.8rem] pb-[0.4rem]">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+          <rect width="16" height="16" rx="4" fill="#FF0000" />
+          <path d="M6.5 5L11 8L6.5 11V5Z" fill="white" />
+        </svg>
+        <span className="text-[1.2rem] font-medium text-black/70 tracking-[-0.01em] truncate">
+          3Blue1Brown &middot; Neural Networks
         </span>
-        <span className="text-[1.7rem] font-semibold leading-[2.2rem] text-black">
-          Research Papers
-        </span>
-        <span className="ml-auto"><ChevronDown /></span>
       </div>
-      <ul className="flex flex-col mt-[0.6rem] pb-[0.4rem]">
-        {["Attention Is All You Need", "Deep Learning", "Neural Networks"].map((item) => (
-          <li key={item} className="flex items-center gap-[1.2rem] pl-[2.8rem] pr-[1.2rem] py-[0.8rem]">
-            <span className="w-[2.2rem] h-[2.2rem] rounded-[0.5rem] bg-gradient-to-br from-amber-200 to-orange-300 shrink-0" />
-            <span className="text-[1.6rem] text-black/70 leading-[2.4rem] whitespace-nowrap truncate">
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
 
-function ListNotesContent() {
+function WebCaptureCard() {
   return (
-    <div className="block text-left pointer-events-auto font-sans w-[33.6rem] p-[1.6rem] bg-white/70 rounded-[1.4rem] border border-black/[0.08] shadow-[0px_8px_22px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <div className="flex items-center gap-[0.8rem] px-[0.4rem] pt-[0.3rem]">
-        <span className="text-[2rem] leading-none" aria-hidden="true">
-          &#x1F4DD;
-        </span>
-        <span className="text-[1.7rem] font-semibold leading-[2.2rem] text-black">
-          Recent Notes
-        </span>
-        <span className="ml-auto"><ChevronDown /></span>
+    <div className={`w-[24rem] ${cardBase} p-[0.8rem] font-sans`}>
+      <div className="relative rounded-[1.2rem] overflow-hidden bg-white aspect-[4/3]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/web-medium.png"
+          alt="Paul Graham — How to Think for Yourself"
+          className="w-full h-full object-cover object-top"
+        />
       </div>
-      <ul className="flex flex-col mt-[0.6rem] pb-[0.4rem]">
-        {["Meeting notes \u2014 Q4 review", "Book highlights \u2014 Sapiens", "Weekly reflection"].map((item) => (
-          <li key={item} className="flex items-center gap-[1.2rem] pl-[2.8rem] pr-[1.2rem] py-[0.8rem]">
-            <span className="w-[2.2rem] h-[2.2rem] rounded-[0.5rem] bg-gradient-to-br from-sky-200 to-indigo-300 shrink-0" />
-            <span className="text-[1.6rem] text-black/70 leading-[2.4rem] whitespace-nowrap truncate">
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex items-center gap-[0.8rem] mt-[0.8rem] px-[0.8rem] pb-[0.4rem]">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+          <circle cx="8" cy="8" r="7" stroke="#777" strokeWidth="1" fill="#f9f9f9" />
+          <ellipse cx="8" cy="8" rx="3" ry="7" stroke="#777" strokeWidth="1" />
+          <line x1="1" y1="8" x2="15" y2="8" stroke="#777" strokeWidth="1" />
+        </svg>
+        <span className="text-[1.2rem] font-medium text-black/70 tracking-[-0.01em] truncate">
+          paulgraham.com
+        </span>
+      </div>
     </div>
   );
 }
 
-function ListBookmarksContent() {
+function AIChatCard() {
   return (
-    <div className="block text-left pointer-events-auto font-sans w-[33.6rem] p-[1.6rem] bg-white/70 rounded-[1.4rem] border border-black/[0.08] shadow-[0px_8px_22px_0px_rgba(0,0,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.6)]">
-      <div className="flex items-center gap-[0.8rem] px-[0.4rem] pt-[0.3rem]">
-        <span className="text-[2rem] leading-none" aria-hidden="true">
-          &#x1F516;
+    <div className={`w-[26rem] ${cardBase} font-sans p-[1.6rem]`}>
+      <div className="flex items-center gap-[1rem] mb-[1.2rem]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon.svg" alt="Oak" className="w-[2.4rem] h-[2.4rem] rounded-[0.5rem]" />
+        <span className="text-[1.6rem] font-medium text-black/85 tracking-[-0.01em]">
+          OakAI
         </span>
-        <span className="text-[1.7rem] font-semibold leading-[2.2rem] text-black">
-          Bookmarks
-        </span>
-        <span className="ml-auto"><ChevronDown /></span>
       </div>
-      <ul className="flex flex-col mt-[0.6rem] pb-[0.4rem]">
-        {["Thinking, Fast and Slow", "The Design of Everyday Things", "Atomic Habits"].map((item) => (
-          <li key={item} className="flex items-center gap-[1.2rem] pl-[2.8rem] pr-[1.2rem] py-[0.8rem]">
-            <span className="w-[2.2rem] h-[2.2rem] rounded-[0.5rem] bg-gradient-to-br from-rose-200 to-pink-300 shrink-0" />
-            <span className="text-[1.6rem] text-black/70 leading-[2.4rem] whitespace-nowrap truncate">
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex flex-col gap-[0.8rem]">
+        <div className="self-end bg-[#f0f0f0] rounded-[1rem] rounded-br-[0.3rem] px-[1.2rem] py-[0.8rem] max-w-[85%]">
+          <p className="text-[1.2rem] text-black/70 leading-[1.6rem]">
+            What is the key insight of this paper?
+          </p>
+        </div>
+        <div className="self-start bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-[1rem] rounded-bl-[0.3rem] px-[1.2rem] py-[0.8rem] max-w-[90%]">
+          <p className="text-[1.2rem] text-black/70 leading-[1.6rem]">
+            The transformer replaces recurrence with self-attention, enabling parallel computation...
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Render the right content component based on card type
-function renderCardContent(card: CardContent, digitIndex: number) {
-  switch (card.type) {
-    case "square":
-      return <SquareCardContent gradient={card.gradient} label={card.label} />;
-    case "wide-tts":
-      return <WideTTSContent digitIndex={digitIndex} />;
-    case "wide-voice":
-      return <WideVoiceContent />;
-    case "wide-translation":
-      return <WideTranslationContent />;
-    case "bar-translation":
-      return <BarTranslationContent />;
-    case "bar-webcapture":
-      return <BarWebCaptureContent />;
-    case "youtube":
-      return <YouTubeContent />;
-    case "list-papers":
-      return <ListPapersContent />;
-    case "list-notes":
-      return <ListNotesContent />;
-    case "list-bookmarks":
-      return <ListBookmarksContent />;
-  }
-}
+// --- Social proof components ---
 
-// Transition preset for card content swaps
-const cardSwapTransition = { duration: 0.4, ease: [0.25, 1, 0.5, 1] as const };
+function EarlyAccessBadge() {
+  return (
+    <motion.div
+      className="mb-[2.4rem]"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="inline-flex items-center gap-[0.8rem] bg-white/70 backdrop-blur border border-[#ededed] rounded-full px-[1.6rem] h-[3.4rem] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <span className="relative flex h-[0.7rem] w-[0.7rem]">
+          <span className="animate-ping absolute h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative rounded-full h-[0.7rem] w-[0.7rem] bg-emerald-500" />
+        </span>
+        <span className="text-[1.3rem] text-black/55 font-medium tracking-[0.01em]">
+          Early Access &middot; macOS
+        </span>
+      </div>
+    </motion.div>
+  );
+}
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -344,14 +174,6 @@ export function Hero() {
   const [charStates, setCharStates] = useState(() =>
     Array.from({ length: charCount }, () => ({ opacity: 0, weight: 100 }))
   );
-
-  // Digit roller state for countdown animations
-  const [digitIndex, setDigitIndex] = useState(0);
-
-  // Card set cycling synced to text animation
-  const cycleCountRef = useRef(0);
-  const [cardSetIndex, setCardSetIndex] = useState(0);
-  const currentSet = CARD_SETS[cardSetIndex] ?? CARD_SETS[0];
 
   const currentTheme = colorThemes[colorIndex];
 
@@ -378,13 +200,6 @@ export function Hero() {
     const animate = (now: number) => {
       const elapsed = now - startTime;
       const cycleTime = elapsed % totalCycle;
-
-      // Detect cycle boundary and swap card set
-      const currentCycle = Math.floor(elapsed / totalCycle);
-      if (currentCycle !== cycleCountRef.current) {
-        cycleCountRef.current = currentCycle;
-        setCardSetIndex(currentCycle % CARD_SETS.length);
-      }
 
       if (cycleTime < typewriterTotal) {
         setCharStates(
@@ -457,22 +272,13 @@ export function Hero() {
     return () => window.clearTimeout(timer);
   }, [colorIndex]);
 
-  // Digit roller cycling
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setDigitIndex((prev) => (prev + 1) % 10);
-    }, 3000);
-    return () => window.clearInterval(timer);
-  }, []);
-
   return (
     <section
       ref={sectionRef}
-      className="h-svh relative overflow-hidden bg-[#f8f8f8] isolate"
+      className="min-h-svh relative overflow-clip bg-[#f8f8f8] isolate pb-[6rem]"
       style={
         {
           "--hero-color": currentTheme.color,
-          contain: "layout paint",
         } as React.CSSProperties
       }
     >
@@ -518,27 +324,33 @@ export function Hero() {
         className="absolute inset-0 z-[2] flex flex-col items-center justify-center text-center text-black leading-[1.05] tracking-[-0.04em] px-[1.6rem] pt-[28svh] min-[800px]:pt-[20svh]"
         style={{ opacity: heroOpacity, scale: heroScale }}
       >
+        <EarlyAccessBadge />
         <div className="flex flex-col items-center text-[4.8rem] min-[600px]:text-[6.4rem] min-[800px]:text-[8rem] min-[1000px]:text-[9.6rem] pointer-events-none">
           <p className="font-sans font-light tracking-[-0.04em] whitespace-nowrap">
             Your
           </p>
           <p className="font-exposure whitespace-nowrap tracking-[0em]">
-            <span
-              className="tracking-[0em] whitespace-nowrap relative after:absolute after:content-[attr(data-text)] after:font-black after:pointer-events-none after:overflow-hidden after:select-none after:invisible after:h-0"
-              data-text={TEXT}
-            >
+            <span className="tracking-[0em] whitespace-nowrap">
               {TEXT.split("").map((letter, i) => (
                 <span
                   key={i}
-                  className="inline-block whitespace-pre"
+                  className="relative inline-block whitespace-pre text-center"
                   aria-hidden="true"
-                  style={{
-                    opacity: charStates[i].opacity,
-                    fontWeight: charStates[i].weight,
-                    fontVariationSettings: undefined,
-                  }}
                 >
-                  {letter}
+                  {/* Invisible bold copy — reserves max width */}
+                  <span className="invisible font-black" aria-hidden="true">
+                    {letter}
+                  </span>
+                  {/* Visible animated copy — centered on top */}
+                  <span
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{
+                      opacity: charStates[i].opacity,
+                      fontWeight: charStates[i].weight,
+                    }}
+                  >
+                    {letter}
+                  </span>
                 </span>
               ))}
               <span className="sr-only">{TEXT}</span>
@@ -550,146 +362,148 @@ export function Hero() {
         </div>
 
         {/* Subtitle + CTA */}
-        <div className="flex flex-col items-center gap-[4.8rem] mt-[6.4rem] min-[800px]:mt-[9.6rem]">
-          <p className="font-sans font-normal tracking-tight text-[1.6rem] min-[600px]:text-[1.8rem] min-[800px]:text-[2.2rem] text-black/65 max-w-[28rem] min-[800px]:max-w-[40rem] leading-[1.5] text-pretty">
+        <div className="flex flex-col items-center gap-[3.2rem] mt-[4.8rem] min-[800px]:mt-[7.2rem]">
+          <p className="font-sans font-medium tracking-[-0.01em] text-[1.6rem] min-[600px]:text-[1.8rem] min-[800px]:text-[2.2rem] text-black/55 max-w-[28rem] min-[800px]:max-w-[40rem] leading-[150%] text-pretty">
             The purpose of reading is insight, not information.
           </p>
-          <button
-            className="pointer-events-auto inline-flex rounded-[1.4rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            title="Get Oak"
-            type="button"
-          >
-            <span className="relative inline-flex items-center justify-center">
-              {/* Glow */}
-              <span
-                aria-hidden="true"
-                className="absolute -inset-x-[3.2rem] -inset-y-[1.6rem] rounded-full blur-[32px] opacity-50 pointer-events-none"
-                style={{
-                  backgroundColor: "var(--hero-color)",
-                  transition:
-                    "background-color 1000ms cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
-              />
-              {/* Button face */}
-              <span
-                className="relative flex items-center justify-center rounded-[1.4rem] text-white font-sans font-medium text-[1.8rem] min-[800px]:text-[2rem] h-[5.6rem] w-[28rem] hover:opacity-85"
-                style={{
-                  backgroundColor:
-                    "color-mix(in srgb, var(--hero-color, #79C9FF) 8%, #0a0a0a)",
-                  boxShadow:
-                    "inset 0 1px 0 0 color-mix(in srgb, var(--hero-color, #79C9FF) 55%, transparent)",
-                  transition:
-                    "opacity 200ms linear, background-color 1000ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 1000ms cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
-              >
-                Get Oak
+          <div className="flex flex-col items-center gap-[2rem]">
+            <Button
+              variant="ghost"
+              className="pointer-events-auto rounded-[1.4rem] p-0 h-auto cursor-pointer hover:bg-transparent"
+              data-tally-open="eqKB9e"
+            >
+              <span className="relative inline-flex items-center justify-center">
+                {/* Glow */}
+                <span
+                  aria-hidden="true"
+                  className="absolute -inset-x-[3.2rem] -inset-y-[1.6rem] rounded-full blur-[32px] opacity-40 pointer-events-none"
+                  style={{
+                    backgroundColor: "var(--hero-color)",
+                    transition:
+                      "background-color 1000ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  }}
+                />
+                {/* Button face */}
+                <span
+                  className="relative flex items-center justify-center rounded-[1.4rem] text-white font-sans font-medium text-[1.8rem] min-[800px]:text-[2rem] h-[5.6rem] w-[28rem] hover:opacity-85"
+                  style={{
+                    backgroundColor:
+                      "color-mix(in srgb, var(--hero-color, #79C9FF) 8%, #0a0a0a)",
+                    boxShadow:
+                      "inset 0 1px 0 0 color-mix(in srgb, var(--hero-color, #79C9FF) 55%, transparent)",
+                    transition:
+                      "opacity 200ms linear, background-color 1000ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 1000ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  }}
+                >
+                  Try for Free
+                </span>
               </span>
-            </span>
-          </button>
+            </Button>
+            <p className="pointer-events-none font-sans text-[1.3rem] min-[800px]:text-[1.4rem] text-black/35 tracking-[0.02em]">
+              Available on macOS &middot; No credit card required
+            </p>
+          </div>
         </div>
       </motion.div>
 
-      {/* Layer 3: Floating cards */}
+      {/* Layer 3: Floating cards — 4 fixed cards with tilt + slow breathing */}
       <div className="absolute inset-0 z-[3] pointer-events-none">
-        {/* Card 0: Top-left — Square badge */}
+        {/* Top-left: Web Capture (Paul Graham) */}
         <FloatingCard
           positionStyle={{
-            left: "max(16px, 36% - 44px - max(0px, 1200px - 100vw))",
-            top: "max(80px, 13% - max(0px, 800px - 100svh))",
+            left: "max(32px, 8%)",
+            top: "max(80px, 14%)",
           }}
           delay={0}
+          parallaxX={-4}
+          parallaxY={6}
+          rotate={-5}
+          drift="drift1"
+          scaleClasses="scale-[0.5] origin-top-left min-[800px]:scale-[0.75] min-[1200px]:scale-[0.85]"
+        >
+          <WebCaptureCard />
+        </FloatingCard>
+
+        {/* Top-right: Video */}
+        <FloatingCard
+          positionStyle={{
+            right: "max(32px, 8%)",
+            top: "max(80px, 10%)",
+          }}
+          delay={0.4}
+          parallaxX={-8}
+          parallaxY={4}
+          rotate={4}
+          drift="drift2"
+          scaleClasses="scale-[0.5] origin-top-right min-[800px]:scale-[0.75] min-[1200px]:scale-[0.85]"
+        >
+          <VideoCard />
+        </FloatingCard>
+
+        {/* Bottom-left: PDF (Attention paper) */}
+        <FloatingCard
+          positionStyle={{
+            left: "max(32px, 10%)",
+            bottom: "max(48px, 8%)",
+          }}
+          delay={0.6}
+          parallaxX={-3}
+          parallaxY={-5}
+          rotate={-3}
+          drift="drift3"
+          scaleClasses="scale-[0.5] origin-bottom-left min-[800px]:scale-[0.75] min-[1200px]:scale-[0.85]"
+        >
+          <PDFCard />
+        </FloatingCard>
+
+        {/* Bottom-right: OakAI */}
+        <FloatingCard
+          positionStyle={{
+            right: "max(32px, 10%)",
+            bottom: "max(48px, 12%)",
+          }}
+          delay={0.2}
           parallaxX={-6}
-          parallaxY={10}
-          scaleClasses="scale-[0.6] origin-top-left min-[800px]:scale-[0.9] min-[800px]:origin-top-left min-[1200px]:scale-100 min-[1200px]:origin-top"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSet[0].id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={cardSwapTransition}
-            >
-              {renderCardContent(currentSet[0], digitIndex)}
-            </motion.div>
-          </AnimatePresence>
-        </FloatingCard>
-
-        {/* Card 1: Top-right — Wide card */}
-        <FloatingCard
-          positionStyle={{
-            left: "min(100% - 288px, 50% + 100px + max(0px, 1200px - 100vw))",
-            top: "max(80px, 15% - max(0px, 800px - 100svh))",
-          }}
-          delay={0.15}
-          parallaxX={-11}
-          parallaxY={5}
-          scaleClasses="scale-[0.45] origin-top-right min-[800px]:scale-[0.8] min-[1200px]:scale-100"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSet[1].id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={cardSwapTransition}
-            >
-              {renderCardContent(currentSet[1], digitIndex)}
-            </motion.div>
-          </AnimatePresence>
-        </FloatingCard>
-
-        {/* Card 2: Bottom-left — Bar / YouTube */}
-        <FloatingCard
-          positionStyle={{
-            left: "max(16px, 4% - max(0px, 1200px - 100vw))",
-            top: "min(100% - 80px, 64% + max(0px, 800px - 100svh) + max(0px, 1200px - 100vw))",
-          }}
-          delay={0.3}
-          parallaxX={-0.6}
           parallaxY={-4}
-          scaleClasses="scale-[0.5] origin-top-left min-[800px]:scale-[0.85] min-[800px]:origin-bottom-left min-[1200px]:scale-100"
+          rotate={3}
+          drift="drift4"
+          scaleClasses="scale-[0.5] origin-bottom-right min-[800px]:scale-[0.75] min-[1200px]:scale-[0.85]"
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSet[2].id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={cardSwapTransition}
-            >
-              {renderCardContent(currentSet[2], digitIndex)}
-            </motion.div>
-          </AnimatePresence>
-        </FloatingCard>
-
-        {/* Card 3: Bottom-right — List / Player */}
-        <FloatingCard
-          positionStyle={{
-            left: "min(100% - 352px, 74% + max(0px, 1200px - 100vw))",
-            top: "min(100% - 220px, 70% + max(0px, 800px - 100svh) + max(0px, 1200px - 100vw))",
-          }}
-          delay={0.45}
-          parallaxX={-5.8}
-          parallaxY={7.4}
-          scaleClasses="scale-[0.55] origin-top-right min-[800px]:scale-[0.8] min-[800px]:origin-bottom-right min-[1200px]:scale-100"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentSet[3].id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={cardSwapTransition}
-            >
-              {renderCardContent(currentSet[3], digitIndex)}
-            </motion.div>
-          </AnimatePresence>
+          <AIChatCard />
         </FloatingCard>
       </div>
+
     </section>
   );
 }
+
+// GSAP-driven organic drift configs — each card gets unique curve parameters
+// Uses layered sine waves at different frequencies for natural, non-repeating feel
+interface DriftConfig {
+  /** x-axis amplitude in px */
+  xAmp: number;
+  /** y-axis amplitude in px */
+  yAmp: number;
+  /** rotation amplitude in degrees */
+  rotAmp: number;
+  /** base cycle duration in seconds */
+  duration: number;
+  /** frequency ratio between x and y — irrational = never repeats */
+  xFreqRatio: number;
+  /** secondary wobble amplitude (adds organic irregularity) */
+  wobble: number;
+}
+
+const driftConfigs: Record<string, DriftConfig> = {
+  // Lissajous-like figure-8
+  drift1: { xAmp: 18, yAmp: 24, rotAmp: 3, duration: 14, xFreqRatio: 0.618, wobble: 5 },
+  // Wide lazy orbit
+  drift2: { xAmp: 22, yAmp: 16, rotAmp: 2.5, duration: 18, xFreqRatio: 1.382, wobble: 4 },
+  // Tall teardrop
+  drift3: { xAmp: 14, yAmp: 28, rotAmp: 3.5, duration: 20, xFreqRatio: 0.724, wobble: 6 },
+  // Compact gentle sway
+  drift4: { xAmp: 20, yAmp: 20, rotAmp: 2, duration: 16, xFreqRatio: 1.175, wobble: 3 },
+};
 
 function FloatingCard({
   children,
@@ -697,6 +511,8 @@ function FloatingCard({
   delay,
   parallaxX,
   parallaxY,
+  drift = "drift1",
+  rotate = 0,
   scaleClasses,
 }: {
   children: React.ReactNode;
@@ -704,38 +520,76 @@ function FloatingCard({
   delay: number;
   parallaxX: number;
   parallaxY: number;
+  drift?: string;
+  rotate?: number;
   scaleClasses: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
 
+  // GSAP organic drift animation
   useEffect(() => {
-    if (!ref.current) return;
+    if (!cardRef.current) return;
+    const el = cardRef.current;
+    const cfg = driftConfigs[drift] ?? driftConfigs.drift1;
+    const totalDelay = 0.5 + delay;
+
+    // Fade in
+    gsap.fromTo(el,
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 0.8, delay: totalDelay, ease: "power3.out" }
+    );
+
+    // Organic drift using GSAP ticker — layered sine waves
+    const startTime = performance.now() / 1000;
+    const driftTick = () => {
+      const t = performance.now() / 1000 - startTime - totalDelay;
+      if (t < 0) return;
+
+      const freq = (2 * Math.PI) / cfg.duration;
+      // Primary motion — different frequencies on x/y create curved paths
+      const px = Math.sin(t * freq * cfg.xFreqRatio) * cfg.xAmp;
+      const py = Math.cos(t * freq) * cfg.yAmp;
+      // Secondary wobble — slower, smaller, different phase
+      const wx = Math.sin(t * freq * 0.37 + 1.2) * cfg.wobble;
+      const wy = Math.cos(t * freq * 0.53 + 2.4) * cfg.wobble;
+      // Rotation — combination of two waves
+      const r = rotate + Math.sin(t * freq * 0.8) * cfg.rotAmp + Math.sin(t * freq * 0.31 + 0.7) * (cfg.rotAmp * 0.4);
+
+      gsap.set(el, {
+        x: px + wx,
+        y: py + wy,
+        rotation: r,
+      });
+    };
+
+    gsap.ticker.add(driftTick);
+    return () => { gsap.ticker.remove(driftTick); };
+  }, [delay, drift, rotate]);
+
+  // Mouse parallax on inner wrapper
+  useEffect(() => {
+    if (!innerRef.current) return;
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth - 0.5) * parallaxX * 2;
       const y = (e.clientY / window.innerHeight - 0.5) * parallaxY * 2;
-      gsap.to(ref.current, { x, y, duration: 1.5, ease: "power2.out" });
+      gsap.to(innerRef.current, { x, y, duration: 1.5, ease: "power2.out" });
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [parallaxX, parallaxY]);
 
   return (
-    <motion.div
-      className="absolute will-change-transform"
+    <div
+      ref={cardRef}
+      className="absolute will-change-transform opacity-0"
       style={positionStyle}
-      initial={{ opacity: 0, y: 20, scale: 1 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.8,
-        delay: 0.5 + delay,
-        ease: [0.16, 1, 0.3, 1],
-      }}
     >
-      <div ref={ref} className="will-change-transform">
+      <div ref={innerRef} className="will-change-transform">
         <div className={scaleClasses}>
           {children}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
