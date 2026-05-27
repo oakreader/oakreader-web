@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import gsap from "gsap";
 import { Button } from "@/components/ui/button";
+import { DOWNLOAD_URL } from "@/lib/links";
 
 // Two color themes that cycle, matching Dia's implementation
 const colorThemes = [
@@ -130,14 +131,21 @@ function AIChatCard() {
       <div className="flex flex-col gap-[0.8rem]">
         <div className="self-end bg-[#f0f0f0] rounded-[1rem] rounded-br-[0.3rem] px-[1.2rem] py-[0.8rem] max-w-[85%]">
           <p className="text-[1.2rem] text-black/70 leading-[1.6rem]">
-            What is the key insight of this paper?
+            What is the key insight?
           </p>
         </div>
         <div className="self-start bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-[1rem] rounded-bl-[0.3rem] px-[1.2rem] py-[0.8rem] max-w-[90%]">
           <p className="text-[1.2rem] text-black/70 leading-[1.6rem]">
-            The transformer replaces recurrence with self-attention, enabling parallel computation...
+            Self-attention replaces recurrence, enabling parallel computation...
           </p>
         </div>
+      </div>
+      {/* Chat input */}
+      <div className="flex items-center gap-[0.6rem] mt-[1rem] bg-[#f5f5f5] rounded-[1rem] px-[1.2rem] py-[0.8rem]">
+        <span className="text-[1.2rem] text-black/30 flex-1">Ask anything...</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 text-black/25">
+          <path d="M7 1V13M7 1L3 5M7 1L11 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </div>
     </div>
   );
@@ -171,9 +179,10 @@ export function Hero() {
   const [colorIndex, setColorIndex] = useState(0);
   const TEXT = "Thinking Partner";
   const charCount = TEXT.length;
-  const [charStates, setCharStates] = useState(() =>
-    Array.from({ length: charCount }, () => ({ opacity: 0, weight: 100 }))
-  );
+
+  // Classic typewriter state: how many characters are visible
+  const [visibleChars, setVisibleChars] = useState(0);
+  const [showCursor, setShowCursor] = useState(true);
 
   const currentTheme = colorThemes[colorIndex];
 
@@ -185,77 +194,53 @@ export function Hero() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
 
-  // Combined animation: typewriter reveal + weight thin->bold + wave shimmer
+  // Typewriter animation with breathing rhythm
+  // Pre-compute cumulative timing: each character has its own delay
+  // creating natural pauses after spaces and slight variation
+  const charTimings = useRef<number[]>([]);
+  if (charTimings.current.length === 0) {
+    const timings: number[] = [];
+    let cumulative = 600; // initial pause before typing starts
+    for (let i = 0; i < charCount; i++) {
+      timings.push(cumulative);
+      const char = TEXT[i];
+      const nextChar = TEXT[i + 1];
+      if (char === " ") {
+        // Breath pause after a word
+        cumulative += 400;
+      } else if (nextChar === " " || i === charCount - 1) {
+        // Slight slowdown at end of word
+        cumulative += 180;
+      } else {
+        // Normal typing with subtle variation
+        cumulative += 120 + Math.sin(i * 1.7) * 30;
+      }
+    }
+    charTimings.current = timings;
+  }
+
   useEffect(() => {
+    const totalType = charTimings.current[charCount - 1] + 200;
+    const holdDuration = 5000;
+    const totalCycle = totalType + holdDuration;
+
     let frame: number;
     const startTime = performance.now();
 
-    const typeDelay = 220;
-    const weightSettleDuration = 800;
-    const typewriterTotal = charCount * typeDelay + weightSettleDuration;
-    const shimmerDuration = 5000;
-    const pauseDuration = 3000;
-    const totalCycle = typewriterTotal + shimmerDuration + pauseDuration;
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
+    const animate = () => {
+      const elapsed = performance.now() - startTime;
       const cycleTime = elapsed % totalCycle;
 
-      if (cycleTime < typewriterTotal) {
-        setCharStates(
-          Array.from({ length: charCount }, (_, i) => {
-            const charStart = i * typeDelay;
-            const charElapsed = cycleTime - charStart;
-
-            if (charElapsed < 0) {
-              return { opacity: 0, weight: 100 };
-            }
-
-            const opacity = Math.min(1, charElapsed / 200);
-            const weightProgress = Math.min(1, charElapsed / weightSettleDuration);
-            const eased = 1 - Math.pow(1 - weightProgress, 3);
-            const overshoot =
-              weightProgress < 0.6
-                ? eased * (650 / 0.82)
-                : 400 +
-                  (550 - 400) *
-                    Math.pow(1 - (weightProgress - 0.6) / 0.4, 2);
-            const weight = Math.min(
-              650,
-              Math.max(100, 100 + (overshoot - 100) * Math.min(1, eased))
-            );
-
-            return { opacity, weight };
-          })
-        );
-      } else if (cycleTime < typewriterTotal + shimmerDuration) {
-        const shimmerElapsed = cycleTime - typewriterTotal;
-        const phase = shimmerElapsed / shimmerDuration;
-
-        setCharStates(
-          Array.from({ length: charCount }, (_, i) => {
-            const charPos = i / (charCount - 1);
-            const dist = Math.abs(charPos - phase);
-            const wrappedDist = Math.min(dist, 1 - dist);
-            const intensity = Math.max(0, 1 - wrappedDist / 0.45);
-            const smoothed = intensity * intensity * (3 - 2 * intensity);
-            return { opacity: 1, weight: 400 + smoothed * 150 };
-          })
-        );
+      if (cycleTime < totalType) {
+        // Count how many characters should be visible at this time
+        let count = 0;
+        for (let i = 0; i < charCount; i++) {
+          if (cycleTime >= charTimings.current[i]) count = i + 1;
+          else break;
+        }
+        setVisibleChars(count);
       } else {
-        const fadeElapsed = cycleTime - typewriterTotal - shimmerDuration;
-        const fadeProgress = fadeElapsed / pauseDuration;
-        const fadeOpacity =
-          fadeProgress < 0.6
-            ? 1
-            : Math.max(0, 1 - (fadeProgress - 0.6) / 0.4);
-
-        setCharStates(
-          Array.from({ length: charCount }, () => ({
-            opacity: fadeOpacity,
-            weight: 400,
-          }))
-        );
+        setVisibleChars(charCount);
       }
 
       frame = requestAnimationFrame(animate);
@@ -263,6 +248,12 @@ export function Hero() {
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
   }, [charCount]);
+
+  // Blinking cursor
+  useEffect(() => {
+    const timer = setInterval(() => setShowCursor((v) => !v), 530);
+    return () => clearInterval(timer);
+  }, []);
 
   // Color cycling: every ~4900ms
   useEffect(() => {
@@ -329,32 +320,16 @@ export function Hero() {
           <p className="font-sans font-light tracking-[-0.04em] whitespace-nowrap">
             Your
           </p>
-          <p className="font-exposure whitespace-nowrap tracking-[0em]">
+          <p className="font-exposure whitespace-nowrap tracking-[0em] font-medium">
             <span className="tracking-[0em] whitespace-nowrap">
-              {TEXT.split("").map((letter, i) => (
-                <span
-                  key={i}
-                  className="relative inline-block whitespace-pre text-center"
-                  aria-hidden="true"
-                >
-                  {/* Invisible bold copy — reserves max width */}
-                  <span className="invisible font-black" aria-hidden="true">
-                    {letter}
-                  </span>
-                  {/* Visible animated copy — centered on top */}
-                  <span
-                    className="absolute inset-0 flex items-center justify-center"
-                    style={{
-                      opacity: charStates[i].opacity,
-                      fontWeight: charStates[i].weight,
-                    }}
-                  >
-                    {letter}
-                  </span>
-                </span>
-              ))}
-              <span className="sr-only">{TEXT}</span>
+              {TEXT.slice(0, visibleChars)}
             </span>
+            <span
+              className="inline-block w-[0.06em] h-[0.85em] bg-current align-baseline ml-[0.04em] translate-y-[0.08em]"
+              style={{ opacity: showCursor ? 1 : 0 }}
+              aria-hidden="true"
+            />
+            <span className="sr-only">{TEXT}</span>
           </p>
           <p className="font-sans font-light tracking-[-0.04em] whitespace-nowrap">
             that inspires insight
@@ -370,7 +345,7 @@ export function Hero() {
             <Button
               variant="ghost"
               className="pointer-events-auto rounded-[1.4rem] p-0 h-auto cursor-pointer hover:bg-transparent"
-              data-tally-open="eqKB9e"
+              render={<a href={DOWNLOAD_URL} />}
             >
               <span className="relative inline-flex items-center justify-center">
                 {/* Glow */}
@@ -395,7 +370,7 @@ export function Hero() {
                       "opacity 200ms linear, background-color 1000ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 1000ms cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 >
-                  Try for Free
+                  Download for Free
                 </span>
               </span>
             </Button>
