@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces, Space_Mono } from "next/font/google";
 import localFont from "next/font/local";
-import Script from "next/script";
 import "./globals.css";
 
 // Inter — clean, modern grotesque sans-serif matching fabric.so's body font
@@ -87,7 +86,6 @@ export default function RootLayout({
     >
       <body className="min-h-dvh overflow-x-hidden font-sans">
         {children}
-        <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
       </body>
     </html>
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import { useReveal } from "@/hooks/use-reveal";
+import { Button } from "@/components/ui/button";
+import { DOWNLOAD_URL } from "@/lib/links";
 
 export function CTA() {
   const headingRef = useReveal<HTMLHeadingElement>();
@@ -23,11 +25,12 @@ export function CTA() {
         style={{ "--reveal-delay": "0.15s" } as React.CSSProperties}
         className="relative z-[2] mt-[4rem]"
       >
-        <button title="Get Oak" type="button">
-          <div className="h-[5rem] px-[2.4rem] flex items-center justify-center gap-[1.4rem] text-[1.6rem] rounded-[1.6rem] bg-black text-white min-w-[17rem] w-max hover:bg-black/90 transition-colors duration-200">
-            <span>Get Oak</span>
-          </div>
-        </button>
+        <Button
+          render={<a href={DOWNLOAD_URL} />}
+          className="h-[5rem] px-[2.4rem] text-[1.6rem] rounded-[1.6rem] bg-black text-white min-w-[17rem] hover:bg-black/90 cursor-pointer"
+        >
+          Download for macOS
+        </Button>
       </div>
 
       <div
