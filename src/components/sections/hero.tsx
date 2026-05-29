@@ -284,7 +284,7 @@ export function Hero() {
         {/* Subtitle + CTA */}
         <div className="flex flex-col items-center gap-[3.2rem] mt-[4.8rem] min-[800px]:mt-[7.2rem]">
           <p className="font-sans font-medium tracking-[-0.01em] text-[1.6rem] min-[600px]:text-[1.8rem] min-[800px]:text-[2.2rem] text-black/55 max-w-[28rem] min-[800px]:max-w-[40rem] leading-[150%] text-pretty">
-            An AI library that&rsquo;s read everything you have. Ask it anything.
+            An AI library that&rsquo;s read every paper, book, and page you keep. Ask it anything.
           </p>
           <div className="flex flex-col items-center gap-[2rem]">
             <Button
