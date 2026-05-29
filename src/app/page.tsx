@@ -1,6 +1,6 @@
 import { Header } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
-import { UseCases } from "@/components/sections/use-cases";
+import { ModelMarquee } from "@/components/sections/model-marquee";
 import { Footer } from "@/components/sections/footer";
 
 export default function Home() {
@@ -9,7 +9,7 @@ export default function Home() {
       <Header />
       <main className="overflow-x-clip">
         <Hero />
-        <UseCases />
+        <ModelMarquee />
       </main>
       <Footer />
     </>

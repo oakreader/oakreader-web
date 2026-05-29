@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { DOWNLOAD_URL } from "@/lib/links";
 
-const navLinks = [{ label: "Features", href: "#features" }];
+const navLinks: { label: string; href: string }[] = [];
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -43,25 +43,27 @@ export function Header() {
             >
               Download
             </a>
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="flex items-center justify-center w-[4rem] h-[4rem] rounded-[1rem] hover:bg-black/5 transition-colors"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                className="text-black"
+            {navLinks.length > 0 && (
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="flex items-center justify-center w-[4rem] h-[4rem] rounded-[1rem] hover:bg-black/5 transition-colors"
               >
-                <path
-                  d="M3 5h14M3 10h14M3 15h14"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="text-black"
+                >
+                  <path
+                    d="M3 5h14M3 10h14M3 15h14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
         <AnimatePresence>
