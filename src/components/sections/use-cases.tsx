@@ -61,7 +61,7 @@ export function UseCases() {
 
   return (
     <section
-      id="use-cases"
+      id="features"
       className="mt-[6rem] md:mt-[8rem] mb-[8rem] md:mb-[10rem] max-w-[120rem] mx-auto px-[1rem] md:px-[2rem]"
     >
       <div
@@ -70,7 +70,7 @@ export function UseCases() {
         className="text-center px-[2rem] mb-[4rem] md:mb-[5rem]"
       >
         <h2 className="font-exposure font-bold text-[3.2rem] md:text-[4rem] lg:text-[4.8rem] leading-[1.15] tracking-[-0.01em] max-w-[20ch] mx-auto">
-          Oak reads between the lines
+          Built for how you actually read
         </h2>
       </div>
 

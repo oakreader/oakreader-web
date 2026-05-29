@@ -6,10 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { DOWNLOAD_URL } from "@/lib/links";
 
-const navLinks = [
-  { label: "How It Works", href: "#use-cases" },
-  { label: "Features", href: "#features" },
-];
+const navLinks = [{ label: "Features", href: "#features" }];
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
