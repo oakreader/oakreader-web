@@ -42,77 +42,22 @@ const colorThemes = [
 // Shared card base class (fabric.so clean style)
 const cardBase = "bg-white border border-[#ededed] rounded-[2rem] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]";
 
-// --- 4 fixed card components: PDF, Video, Web Capture, AI Chat ---
+// --- Floating cards: real app screenshots framed as windows + an AI chat mock ---
 
-function PDFCard() {
+function ShotCard({
+  src,
+  alt,
+  width = "32rem",
+}: {
+  src: string;
+  alt: string;
+  width?: string;
+}) {
   return (
-    <div className={`w-[24rem] ${cardBase} p-[0.8rem] font-sans`}>
-      <div className="relative rounded-[1.2rem] overflow-hidden bg-white aspect-[3/4]">
+    <div className={`${cardBase} p-[0.6rem]`} style={{ width }}>
+      <div className="rounded-[1.4rem] overflow-hidden border border-black/8 bg-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/paper-attention.png"
-          alt="Attention Is All You Need — Vaswani et al."
-          className="w-full h-full object-cover object-top"
-        />
-      </div>
-      <div className="flex items-center gap-[0.8rem] mt-[0.8rem] px-[0.8rem] pb-[0.4rem]">
-        <svg width="16" height="18" viewBox="0 0 16 18" fill="none" className="shrink-0">
-          <rect x="0.5" y="0.5" width="15" height="17" rx="2" stroke="#E53E3E" strokeWidth="1" fill="#FFF5F5" />
-          <text x="8" y="12.5" textAnchor="middle" fontSize="7" fontWeight="700" fill="#E53E3E">PDF</text>
-        </svg>
-        <span className="text-[1.2rem] font-medium text-black/70 tracking-[-0.01em] truncate">
-          Attention Is All You Need
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function VideoCard() {
-  return (
-    <div className={`w-[24rem] ${cardBase} p-[0.8rem]`}>
-      <div className="relative aspect-video rounded-[1.2rem] overflow-hidden bg-black">
-        <iframe
-          src="https://www.youtube-nocookie.com/embed/aircAruvnKk"
-          title="3Blue1Brown — But what is a neural network?"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="absolute inset-0 w-full h-full pointer-events-auto"
-        />
-      </div>
-      <div className="flex items-center gap-[0.8rem] mt-[0.8rem] px-[0.8rem] pb-[0.4rem]">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-          <rect width="16" height="16" rx="4" fill="#FF0000" />
-          <path d="M6.5 5L11 8L6.5 11V5Z" fill="white" />
-        </svg>
-        <span className="text-[1.2rem] font-medium text-black/70 tracking-[-0.01em] truncate">
-          3Blue1Brown &middot; Neural Networks
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function WebCaptureCard() {
-  return (
-    <div className={`w-[24rem] ${cardBase} p-[0.8rem] font-sans`}>
-      <div className="relative rounded-[1.2rem] overflow-hidden bg-white aspect-[4/3]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/web-medium.png"
-          alt="Paul Graham — How to Think for Yourself"
-          className="w-full h-full object-cover object-top"
-        />
-      </div>
-      <div className="flex items-center gap-[0.8rem] mt-[0.8rem] px-[0.8rem] pb-[0.4rem]">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-          <circle cx="8" cy="8" r="7" stroke="#777" strokeWidth="1" fill="#f9f9f9" />
-          <ellipse cx="8" cy="8" rx="3" ry="7" stroke="#777" strokeWidth="1" />
-          <line x1="1" y1="8" x2="15" y2="8" stroke="#777" strokeWidth="1" />
-        </svg>
-        <span className="text-[1.2rem] font-medium text-black/70 tracking-[-0.01em] truncate">
-          paulgraham.com
-        </span>
+        <img src={src} alt={alt} className="w-full h-auto block" />
       </div>
     </div>
   );
@@ -339,12 +284,13 @@ export function Hero() {
         {/* Subtitle + CTA */}
         <div className="flex flex-col items-center gap-[3.2rem] mt-[4.8rem] min-[800px]:mt-[7.2rem]">
           <p className="font-sans font-medium tracking-[-0.01em] text-[1.6rem] min-[600px]:text-[1.8rem] min-[800px]:text-[2.2rem] text-black/55 max-w-[28rem] min-[800px]:max-w-[40rem] leading-[150%] text-pretty">
-            The purpose of reading is insight, not information.
+            An AI library that&rsquo;s read everything you have. Ask it anything.
           </p>
           <div className="flex flex-col items-center gap-[2rem]">
             <Button
               variant="ghost"
               className="pointer-events-auto rounded-[1.4rem] p-0 h-auto cursor-pointer hover:bg-transparent"
+              nativeButton={false}
               render={<a href={DOWNLOAD_URL} />}
             >
               <span className="relative inline-flex items-center justify-center">
@@ -381,9 +327,9 @@ export function Hero() {
         </div>
       </motion.div>
 
-      {/* Layer 3: Floating cards — 4 fixed cards with tilt + slow breathing */}
+      {/* Layer 3: Floating cards — real app screenshots with tilt + slow breathing */}
       <div className="absolute inset-0 z-[3] pointer-events-none">
-        {/* Top-left: Web Capture (Paul Graham) */}
+        {/* Top-left: Library */}
         <FloatingCard
           positionStyle={{
             left: "max(32px, 8%)",
@@ -396,10 +342,10 @@ export function Hero() {
           drift="drift1"
           scaleClasses="scale-[0.5] origin-top-left min-[800px]:scale-[0.75] min-[1200px]:scale-[0.85]"
         >
-          <WebCaptureCard />
+          <ShotCard src="/shots/library.png" alt="Oak library with collections and full-text search" />
         </FloatingCard>
 
-        {/* Top-right: Video */}
+        {/* Top-right: In-app browser */}
         <FloatingCard
           positionStyle={{
             right: "max(32px, 8%)",
@@ -412,10 +358,10 @@ export function Hero() {
           drift="drift2"
           scaleClasses="scale-[0.5] origin-top-right min-[800px]:scale-[0.75] min-[1200px]:scale-[0.85]"
         >
-          <VideoCard />
+          <ShotCard src="/shots/browser-search.png" alt="Oak's in-app browser search routing to the web or AI" />
         </FloatingCard>
 
-        {/* Bottom-left: PDF (Attention paper) */}
+        {/* Bottom-left: AI answer with math */}
         <FloatingCard
           positionStyle={{
             left: "max(32px, 10%)",
@@ -428,7 +374,7 @@ export function Hero() {
           drift="drift3"
           scaleClasses="scale-[0.5] origin-bottom-left min-[800px]:scale-[0.75] min-[1200px]:scale-[0.85]"
         >
-          <PDFCard />
+          <ShotCard src="/shots/ai-agent.png" alt="Oak answering a question with rendered math and markdown" />
         </FloatingCard>
 
         {/* Bottom-right: OakAI */}

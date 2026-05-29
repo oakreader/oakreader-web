@@ -9,7 +9,6 @@ import { DOWNLOAD_URL } from "@/lib/links";
 const navLinks = [
   { label: "How It Works", href: "#use-cases" },
   { label: "Features", href: "#features" },
-  { label: "Privacy", href: "#privacy" },
 ];
 
 export function Header() {

@@ -10,24 +10,30 @@ gsap.registerPlugin(ScrollTrigger);
 const useCases = [
   {
     number: "01",
-    title: "Read deeper, not just faster",
+    title: "Ask, and read between the lines",
     description:
-      "Open any PDF and ask Oak what it means. Summarize a chapter, explain a concept, translate a passage — Oak reads alongside you so every page earns its time.",
+      "Open any document and ask Oak what it means. It answers in context with formatted notes, code, and rendered math — and you can switch between Claude, GPT, Gemini, or a local model on your Mac.",
+    image: "/shots/ai-agent.png",
+    alt: "Oak answering a question with formatted markdown and rendered LaTeX math",
     color: "from-sky-100 via-blue-50 to-indigo-100",
   },
   {
     number: "02",
-    title: "Your notes become a conversation",
+    title: "Browse the web without leaving",
     description:
-      "Highlight a passage and Oak surfaces what matters. Add notes, sketch ideas, mark key points — your annotations become a dialogue with the text, not just color on a page.",
-    color: "from-violet-100 via-purple-50 to-fuchsia-100",
+      "Open a new tab and search the web, jump straight to a link, or just ask the AI. Read live pages in place with your logins intact, then capture anything worth keeping into your library.",
+    image: "/shots/browser-search.png",
+    alt: "Oak's in-app browser new-tab search routing to the web or the AI",
+    color: "from-emerald-100 via-teal-50 to-cyan-100",
   },
   {
     number: "03",
-    title: "Find the answer without hunting it down",
+    title: "Your whole library, one question away",
     description:
-      "Ask once. Oak searches across your entire library — every PDF, every highlight, every note — and answers like someone who's read every page.",
-    color: "from-emerald-100 via-teal-50 to-cyan-100",
+      "Every PDF, article, and web snapshot in one place — sorted into collections and tags, with full-text search that even understands Chinese, Japanese, and Korean. Ask once and Oak reads across all of it.",
+    image: "/shots/library.png",
+    alt: "Oak's library with collections, tags, and full-text search",
+    color: "from-violet-100 via-purple-50 to-fuchsia-100",
   },
 ];
 
@@ -208,25 +214,15 @@ function UseCasePlaceholder({
 }) {
   return (
     <div
-      className={`relative rounded-[2rem] md:rounded-[2.4rem] overflow-hidden bg-gradient-to-br ${useCase.color} aspect-[16/10] flex flex-col items-center justify-center border border-black/5`}
+      className={`relative rounded-[1.6rem] md:rounded-[2rem] overflow-hidden aspect-[16/10] border border-black/8 bg-gradient-to-br ${useCase.color} shadow-[0_2px_8px_rgba(0,0,0,0.05),0_24px_48px_-12px_rgba(0,0,0,0.18)]`}
     >
-      <div className="absolute top-0 left-0 right-0 h-[4rem] bg-white/40 backdrop-blur-sm flex items-center px-[1.6rem] gap-[0.8rem]">
-        <span className="w-[1.2rem] h-[1.2rem] rounded-full bg-red-300/60" />
-        <span className="w-[1.2rem] h-[1.2rem] rounded-full bg-yellow-300/60" />
-        <span className="w-[1.2rem] h-[1.2rem] rounded-full bg-green-300/60" />
-        <div className="flex-1 mx-[2rem] h-[2.4rem] bg-white/50 rounded-[0.6rem]" />
-      </div>
-      <div className="text-center p-[4rem] pt-[6rem]">
-        <span className="font-mono text-[1.3rem] uppercase tracking-[0.1em] text-black/30 mb-[1rem] block">
-          {useCase.number}
-        </span>
-        <h3 className="font-exposure font-bold text-[2.4rem] md:text-[3.2rem] tracking-[0em] text-black/50">
-          {useCase.title}
-        </h3>
-        <p className="font-sans mt-[1rem] text-[1.6rem] text-black/30 max-w-[40ch] mx-auto leading-[2.4rem]">
-          {useCase.description}
-        </p>
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={useCase.image}
+        alt={useCase.alt}
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover object-top"
+      />
     </div>
   );
 }
